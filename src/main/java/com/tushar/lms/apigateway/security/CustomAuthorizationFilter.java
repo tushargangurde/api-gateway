@@ -85,6 +85,8 @@ public class CustomAuthorizationFilter implements GlobalFilter {
 				});
 			}
 
+			response.getHeaders().add("Authorization", authorizationHeader);
+
 			return chain.filter(exchange);
 		}
 	}
