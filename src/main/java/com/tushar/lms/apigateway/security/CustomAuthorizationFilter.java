@@ -15,7 +15,6 @@ import org.springframework.web.server.ServerWebExchange;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,56 +42,46 @@ public class CustomAuthorizationFilter implements GlobalFilter {
 			if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer")) {
 				logger.info("Authorization header is empty or does not start with Bearer");
 				return Mono.defer(() -> {
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);// Set status
-
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					byte[] bytes = "No token present".getBytes(StandardCharsets.UTF_8);
 					DataBuffer buffer = response.bufferFactory().wrap(bytes);
 					logger.info("No token present");
-					return response.writeWith(Flux.just(buffer));// Set body
+					return response.writeWith(Flux.just(buffer));
 				});
 
 			}
 
 			String token = authorizationHeader.replace("Bearer ", "");
 			String userId = null;
-			
+
 			try {
 				userId = Jwts.parser().setSigningKey("secret_key").parseClaimsJws(token).getBody().getSubject();
 			} catch (ExpiredJwtException exception) {
 				return Mono.defer(() -> {
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);// Set status
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					byte[] bytes = "JWT Token Expired".getBytes(StandardCharsets.UTF_8);
 					DataBuffer buffer = response.bufferFactory().wrap(bytes);
 					logger.info("JWT Token Expired");
-					return response.writeWith(Flux.just(buffer));// Set body
-				});
-			} catch (SignatureException exception) {
-				return Mono.defer(() -> {
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);// Set status
-					byte[] bytes = "JWT signature does not match".getBytes(StandardCharsets.UTF_8);
-					DataBuffer buffer = response.bufferFactory().wrap(bytes);
-					logger.info("JWT signature does not match");
-					return response.writeWith(Flux.just(buffer));// Set body
+					return response.writeWith(Flux.just(buffer));
 				});
 			} catch (Exception exception) {
 				return Mono.defer(() -> {
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);// Set status
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					byte[] bytes = ("JWT related exception. " + exception.getMessage())
 							.getBytes(StandardCharsets.UTF_8);
 					DataBuffer buffer = response.bufferFactory().wrap(bytes);
 					logger.info(exception.getMessage());
-					return response.writeWith(Flux.just(buffer));// Set body
+					return response.writeWith(Flux.just(buffer));
 				});
 			}
 
 			if (userId == null) {
 				return Mono.defer(() -> {
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);// Set status
-
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					byte[] bytes = "User Id is not present".getBytes(StandardCharsets.UTF_8);
 					DataBuffer buffer = response.bufferFactory().wrap(bytes);
 					logger.info("User Id is not present");
-					return response.writeWith(Flux.just(buffer));// Set body
+					return response.writeWith(Flux.just(buffer));
 				});
 			}
 
