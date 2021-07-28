@@ -33,9 +33,7 @@ public class CustomAuthorizationFilter implements GlobalFilter {
 
 		logger.info("Request Path:" + requestPath);
 
-		if (requestPath.equals("/user/add") || requestPath.equals("/login")) {
-			return chain.filter(exchange);
-		} else {
+		if (!requestPath.equals("/user/add") && !requestPath.equals("/login")) {
 
 			String authorizationHeader = request.getHeaders().getFirst("Authorization");
 
@@ -56,7 +54,7 @@ public class CustomAuthorizationFilter implements GlobalFilter {
 
 			try {
 				userId = Jwts.parser().setSigningKey("secret_key").parseClaimsJws(token).getBody().getSubject();
-				logger.info("User ID:"+userId);
+				logger.info("User ID:" + userId);
 			} catch (ExpiredJwtException exception) {
 				return Mono.defer(() -> {
 					response.setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -88,8 +86,8 @@ public class CustomAuthorizationFilter implements GlobalFilter {
 
 			response.getHeaders().add("Authorization", authorizationHeader);
 
-			return chain.filter(exchange);
 		}
+		return chain.filter(exchange);
 	}
 
 }
